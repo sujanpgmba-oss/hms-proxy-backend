@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
 require('dotenv').config();
 
 const app = express();
@@ -41,10 +43,10 @@ app.get('/health', (req, res) => {
   });
 });
 
-// HMS Auth Token Endpoint
+// HMS Auth Token Endpoint - Generate JWT token
 app.post('/api/hms/auth-token', async (req, res) => {
   try {
-    const { roomId, userId, role = 'participant' } = req.body;
+    const { roomId, userId, role = 'guest' } = req.body;
 
     console.log('🔐 Auth token request:', { roomId, userId, role });
 
@@ -61,46 +63,32 @@ app.post('/api/hms/auth-token', async (req, res) => {
       });
     }
 
-    // Use native fetch (Node 18+) - Auth tokens need App Access Key + Secret
-    const response = await fetch(`${HMS_API_URL}/auth-token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${HMS_APP_SECRET}`
-      },
-      body: JSON.stringify({
-        room_id: roomId,
-        role: role,
-        user_id: userId,
-        type: 'app',
-        access_key: HMS_ACCESS_KEY
-      })
+    // Generate JWT token for HMS
+    const now = Math.floor(Date.now() / 1000);
+    const exp = now + (24 * 3600); // 24 hours expiry
+
+    const payload = {
+      access_key: HMS_ACCESS_KEY,
+      room_id: roomId,
+      user_id: userId,
+      role: role,
+      type: 'app',
+      version: 2,
+      iat: now,
+      nbf: now,
+      exp: exp,
+      jti: uuidv4()
+    };
+
+    const token = jwt.sign(payload, HMS_APP_SECRET, {
+      algorithm: 'HS256'
     });
 
-    if (!response.ok) {
-      console.error('❌ HMS API Error:', response.status, response.statusText);
-      let errorMessage = 'HMS API Error';
-      let errorData = {};
-      try {
-        errorData = await response.json();
-        console.error('❌ Full HMS Error Response:', JSON.stringify(errorData, null, 2));
-        errorMessage = errorData.message || errorData.error || response.statusText;
-      } catch (e) {
-        console.error('❌ Could not parse error response');
-        errorMessage = response.statusText;
-      }
-      return res.status(response.status).json({ 
-        error: errorMessage,
-        hmsError: errorData
-      });
-    }
-
-    const data = await response.json();
     console.log('✅ Auth token generated successfully');
-    res.json({ token: data.token });
+    res.json({ token });
 
   } catch (error) {
-    console.error('❌ Error:', error);
+    console.error('❌ Error generating token:', error);
     res.status(500).json({ 
       error: error.message || 'Internal server error' 
     });
