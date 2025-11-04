@@ -80,14 +80,18 @@ app.post('/api/hms/auth-token', async (req, res) => {
     if (!response.ok) {
       console.error('❌ HMS API Error:', response.status, response.statusText);
       let errorMessage = 'HMS API Error';
+      let errorData = {};
       try {
-        const errorData = await response.json();
+        errorData = await response.json();
+        console.error('❌ Full HMS Error Response:', JSON.stringify(errorData, null, 2));
         errorMessage = errorData.message || errorData.error || response.statusText;
       } catch (e) {
+        console.error('❌ Could not parse error response');
         errorMessage = response.statusText;
       }
       return res.status(response.status).json({ 
-        error: errorMessage
+        error: errorMessage,
+        hmsError: errorData
       });
     }
 
