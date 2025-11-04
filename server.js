@@ -7,6 +7,8 @@ const PORT = process.env.PORT || 10000;
 
 // HMS Configuration - Read from environment
 const HMS_MANAGEMENT_TOKEN = process.env.HMS_MANAGEMENT_TOKEN || '';
+const HMS_ACCESS_KEY = process.env.HMS_ACCESS_KEY || '';
+const HMS_APP_SECRET = process.env.HMS_APP_SECRET || '';
 const HMS_API_URL = 'https://api.100ms.live/v2';
 
 // Middleware
@@ -52,19 +54,19 @@ app.post('/api/hms/auth-token', async (req, res) => {
       });
     }
 
-    if (!HMS_MANAGEMENT_TOKEN) {
-      console.error('❌ HMS_MANAGEMENT_TOKEN not configured!');
+    if (!HMS_ACCESS_KEY || !HMS_APP_SECRET) {
+      console.error('❌ HMS_ACCESS_KEY or HMS_APP_SECRET not configured!');
       return res.status(500).json({ 
-        error: 'HMS Management Token not configured on server' 
+        error: 'HMS App credentials not configured on server' 
       });
     }
 
-    // Use native fetch (Node 18+)
+    // Use native fetch (Node 18+) - Auth tokens need App Secret, not Management Token
     const response = await fetch(`${HMS_API_URL}/auth-token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${HMS_MANAGEMENT_TOKEN}`
+        'Authorization': `Bearer ${HMS_APP_SECRET}`
       },
       body: JSON.stringify({
         room_id: roomId,
