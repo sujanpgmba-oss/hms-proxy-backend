@@ -61,7 +61,7 @@ app.post('/api/hms/auth-token', async (req, res) => {
       });
     }
 
-    // Use native fetch (Node 18+) - Auth tokens need App Secret, not Management Token
+    // Use native fetch (Node 18+) - Auth tokens need App Access Key + Secret
     const response = await fetch(`${HMS_API_URL}/auth-token`, {
       method: 'POST',
       headers: {
@@ -72,7 +72,8 @@ app.post('/api/hms/auth-token', async (req, res) => {
         room_id: roomId,
         role: role,
         user_id: userId,
-        type: 'app'
+        type: 'app',
+        access_key: HMS_ACCESS_KEY
       })
     });
 
