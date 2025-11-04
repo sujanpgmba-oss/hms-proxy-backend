@@ -74,15 +74,21 @@ app.post('/api/hms/auth-token', async (req, res) => {
       })
     });
 
-    const data = await response.json();
-
     if (!response.ok) {
-      console.error('❌ HMS API Error:', response.status, data);
+      console.error('❌ HMS API Error:', response.status, response.statusText);
+      let errorMessage = 'HMS API Error';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || response.statusText;
+      } catch (e) {
+        errorMessage = response.statusText;
+      }
       return res.status(response.status).json({ 
-        error: data.message || 'HMS API Error' 
+        error: errorMessage
       });
     }
 
+    const data = await response.json();
     console.log('✅ Auth token generated successfully');
     res.json({ token: data.token });
 
@@ -125,15 +131,21 @@ app.post('/api/hms/rooms', async (req, res) => {
       })
     });
 
-    const data = await response.json();
-
     if (!response.ok) {
-      console.error('❌ HMS API Error:', response.status, data);
+      console.error('❌ HMS API Error:', response.status, response.statusText);
+      let errorMessage = 'HMS API Error';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || response.statusText;
+      } catch (e) {
+        errorMessage = response.statusText;
+      }
       return res.status(response.status).json({ 
-        error: data.message || 'HMS API Error' 
+        error: errorMessage
       });
     }
 
+    const data = await response.json();
     console.log('✅ Room created:', data.id);
     res.json(data);
 
@@ -169,15 +181,21 @@ app.get('/api/hms/rooms/:roomId', async (req, res) => {
       return res.json({ exists: false });
     }
 
-    const data = await response.json();
-
     if (!response.ok) {
-      console.error('❌ HMS API Error:', response.status, data);
+      console.error('❌ HMS API Error:', response.status, response.statusText);
+      let errorMessage = 'HMS API Error';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || response.statusText;
+      } catch (e) {
+        errorMessage = response.statusText;
+      }
       return res.status(response.status).json({ 
-        error: data.message || 'HMS API Error' 
+        error: errorMessage
       });
     }
 
+    const data = await response.json();
     console.log('✅ Room found:', data.id);
     res.json(data);
 
